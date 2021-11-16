@@ -3,60 +3,37 @@ var mediaAplhaImageReal = [];
 var mediaAplhaNewImage = [];
 const numberTriagles = 100;
 const populationSize = 100;
+const eliteSize = 10;
+const epochs = (10 * 1000);
+
+//declarando elementos
+const canvas = document.getElementById("canvas");
+const context = canvas.getContext('2d');
+
+const canvas2 = document.getElementById("canvas2");
+const context2 = canvas2.getContext('2d');
+
+const text = document.getElementById("infor");
+
+//capturando o tamanho do canvas
+const width = canvas.width;
+const height = canvas.height;
 
 window.onload = function () {
-
-    //declarando elementos
-    const canvas = document.getElementById("canvas");
-    const context = canvas.getContext('2d');
-
-    const canvas2 = document.getElementById("canvas2");
-    const context2 = canvas2.getContext('2d');
-
-    //capturando o tamanho do canvas
-    const width = canvas.width;
-    const height = canvas.height;
 
     //desesenhando imagem no canvas
     const image = document.getElementById("image");
     context.drawImage(image, 0, 0, width, height);
 
     //pegando o shape da image data do canvas [12,121,12,212,121...]1
-    //tranformando em array de rgba = [[255,225,12,255],...]
-    //tirando as medias de cores da imagem real RGBA
     realImage = context.getImageData(0, 0, width, height);
-    // realImage = trasnformCanal(shapeImage.data);
-    // mediaAplhaImageReal = mediaCanal(realImage);
 
-    //criando individuo inicial teste
-    // var individuo = createIdividual(width, height);
-
-    //redesenhando nova imagem
-    // drawTriagle(individuo, context2);
-
-    //mostrando nova imgagem = individuo
-    // const newImage = context2.getImageData(0, 0, width, height);
-    // var shapeArray = trasnformCanal(newShapeImage.data);
-    // mediaAplhaNewImage = mediaCanal(newImage);
-
-    //calcular fitness da nova imagem
-    // console.log(fitness(realImage, newImage));
-
-    //criando população
-    var population = createPopulation(width, height);
-    population = compute_fitness(population, context2, width, height);
-    // console.log(population[0]);
-    // console.log(roulete(population));
-    // crossover(population[0][0], population[1][0])
-
-    population = new_generation(population, width, height);
-    population = compute_fitness(population, context2, width, height);
-
-    // context2.putImageData(data, 0, 0);
+    genalg(epochs);
 
 }
 
-function createIdividual(width, height, size = numberTriagles) {
+
+function createIdividual(size = numberTriagles) {
 
     var data = [];
 
@@ -89,12 +66,12 @@ function createIdividual(width, height, size = numberTriagles) {
 
 }
 
-function createPopulation(width, height, size = populationSize) {
+function create_population(size = populationSize) {
 
     var data = [];
 
     for (let i = 0; i < size; i++) {
-        let temp = createIdividual(width, height);
+        let temp = createIdividual();
         data.push([temp, 0]);
     }
 
@@ -102,51 +79,57 @@ function createPopulation(width, height, size = populationSize) {
 
 }
 
-function crossover(chromosome1, chromosome2) {
+function crossover(individuo1, individuo2) {
 
     var children = [];
 
-    let individuo1 = chromosome1[0];
-    let individuo2 = chromosome2[0];
-    let length = chromosome1[0].length;
+    let length = individuo1[0].length;
 
     //reprodução de um ponto
-    var idx = Math.round(Math.random() * (length));
+    var idx = Math.round(Math.random() * (length - 1));
 
     for (let i = 0; i < length; i++) {
         if (i <= idx) {
-            children.push(individuo1[i])
+            children.push(individuo1[0][i])
         } else {
-            children.push(individuo2[i])
+            children.push(individuo2[0][i])
         }
     }
 
-    //retorna os dois filhos
+    //retorna um filho
     return children;
 
 }
 
-function mutation(chromosome, width, height) {
+function mutation(individuo) {
 
-    var length = chromosome.length;
+
+    var length = individuo.length;
+    var idxIndividuo = Math.round(Math.random() * (length - 1));
+    var chromosome = individuo[idxIndividuo];
+
+    length = chromosome.length;
     var idx = Math.round(Math.random() * (length - 1));
+
 
     //represeta as coordenadas 0 a 5
     if (idx % 10 < 6) {
         if (idx % 2) {
-            chromosome[idx] = Math.round(Math.random() * (width - 1));
+            chromosome[idx] = Math.random() * (width - 1);
         } else {
-            chromosome[idx] = Math.round(Math.random() * (height - 1));
+            chromosome[idx] = Math.random() * (height - 1);
         }
     } else if (idx % 10 < 9) {
         //cores
-        chromosome[idx] = Math.round(Math.random() * (255 - 1));
+        chromosome[idx] = Math.random() * (255 - 1);
     } else {
         //alpha
         chromosome[idx] = Math.random();
     }
 
-    return chromosome;
+    individuo[idxIndividuo] = chromosome;
+
+    return individuo;
 
 }
 
@@ -172,22 +155,24 @@ function fitness(originalShape, newShape) {
 
 }
 
-function compute_fitness(population, context, width, height) {
+function compute_fitness(population) {
 
     let newPopulation = [];
 
     //calcular score de cada individuo
     for (let i = 0; i < population.length; i++) {
-        //limpando contexto
-        context.clearRect(0, 0, width, height);
-        //redesenhando nova imagem
-        drawTriagle(population[i][0], context);
-        //mostrando nova imgagem = individuo
-        let newImage = context.getImageData(0, 0, width, height);
-        //calculando fitness
-        score = fitness(realImage, newImage)
+        if (population[i][1] == 0) {
+            //limpando contexto
+            context2.clearRect(0, 0, width, height);
+            //redesenhando nova imagem
+            drawTriagle(population[i][0], context2);
+            //mostrando nova imgagem = individuo
+            let newImage = context2.getImageData(0, 0, width, height);
+            //calculando fitness
+            score = fitness(realImage, newImage)
 
-        newPopulation.push([population[i], score]);
+            newPopulation.push([population[i], score]);
+        }
     }
 
     newPopulation.sort(function compare(a, b) {
@@ -200,24 +185,25 @@ function compute_fitness(population, context, width, height) {
 
     //mostrando o melhor
     //limpando contexto
-    context.clearRect(0, 0, width, height);
+    context2.clearRect(0, 0, width, height);
     //redesenhando nova imagem
-    drawTriagle(population[0][0], context);
+    drawTriagle(population[0][0]);
+
 
     return newPopulation;
 
 }
 
-function drawTriagle(data, context) {
+function drawTriagle(data) {
 
     for (let i = 0; i < data.length; i++) {
         var img = data[i];
         var path = new Path2D();
-        context.fillStyle = `rgba(${img[6]},${img[7]},${img[8]},${img[9]})`
+        context2.fillStyle = `rgba(${img[6]},${img[7]},${img[8]},${img[9]})`
         path.moveTo(img[0], img[1]);
         path.lineTo(img[2], img[3]);
         path.lineTo(img[4], img[5]);
-        context.fill(path);
+        context2.fill(path);
     }
 
 }
@@ -248,20 +234,74 @@ function roulete(population) {
 
 }
 
-function new_generation(population, width, height) {
+function new_generation(population) {
 
     var newPopulation = [];
 
-    for (let i = 0; i < populationSize; i++) {
+    let length = populationSize - eliteSize;
+
+    for (let i = 0; i < length; i++) {
         let individuo1 = population[roulete(population)][0]
         let individuo2 = population[roulete(population)][0]
         let newIndividuo = crossover(individuo1, individuo2);
-        newIndividuo = mutation(newIndividuo, width, height);
+        newIndividuo = mutation(newIndividuo);
         newPopulation.push([newIndividuo, 0]);
     }
 
     return newPopulation;
 
+}
+
+function genalg(epochs) {
+
+    var population = create_population();
+
+    //limpando contexto
+    context2.clearRect(0, 0, width, height);
+    //redesenhando nova imagem
+    drawTriagle(population[0][0]);
+
+    for (let i = 0; i < epochs; i++) {
+
+        sleep(1000).then(() => {
+
+            var elite = [];
+
+            population = compute_fitness(population);
+
+            for (let j = 0; j < eliteSize; j++) {
+                elite.push(population[j])
+            }
+
+            // console.log(elite[0][1]);
+
+            population = new_generation(population);
+
+            for (let j = 0; j < elite.length; j++) {
+                population.push(elite[j]);
+            }
+
+            text.innerText = `Geração: ${(i + 1)} \n`;
+            text.innerText += `Fitness: ${Math.round(elite[0][1])} \n`;
+            text.innerText += `Tamnaho da População: ${population.length} \n`;
+            text.innerText += `Tamanho do genoma do primeiro individuo: ${population[0][0].length} \n`;
+
+        });
+
+    }
+
+    // //mostrando o melhor
+    // context2.clearRect(0, 0, width, height);
+    // drawTriagle(population[0][0]);
+
+    // console.log(population[0][0]);
+
+    // console.log("aqui");
+
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // function trasnformCanal(data) {
