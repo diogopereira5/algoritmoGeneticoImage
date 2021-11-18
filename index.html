@@ -7,12 +7,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="main.css">
     <title>GenerImage</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.6.0/dist/chart.min.js"></script>
 </head>
 
 <body>
     <img src="./image.jpg" id="image" alt="cubo.png">
     <canvas id="canvas" width="200" height="200"></canvas>
     <canvas id="canvas2" width="200" height="200"></canvas>
+    <div style="width: 200px; height: 200px;">
+        <canvas id="chart" style="margin: 0;" width="200" height="200"></canvas>
+    </div>
     <p id="infor">Geração: 1</p>
     <script src="./main.js"></script>
 </body>

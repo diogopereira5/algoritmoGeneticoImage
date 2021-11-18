@@ -1,10 +1,10 @@
 var realImage = [];
-var mediaAplhaImageReal = [];
-var mediaAplhaNewImage = [];
+var colorBase = [];
 const numberTriagles = 100;
 const populationSize = 100;
 const eliteSize = 2;
-const epochs = (0.001 * 1000);
+const epochs = (50 * 1000);
+var chartData = null;
 
 //declarando elementos
 const canvas = document.getElementById("canvas");
@@ -12,6 +12,9 @@ const context = canvas.getContext('2d');
 
 const canvas2 = document.getElementById("canvas2");
 const context2 = canvas2.getContext('2d');
+
+const chartCanvas = document.getElementById('chart');
+const chartCtx = chartCanvas.getContext('2d');
 
 const text = document.getElementById("infor");
 
@@ -27,6 +30,13 @@ window.onload = function () {
 
     //pegando o shape da image data do canvas [12,121,12,212,121...]1
     realImage = context.getImageData(0, 0, width, height);
+    let temp = trasnformCanal(realImage.data);
+    colorBase = mediaCanal(temp);
+
+    chartData = new Chart(chartCtx, {
+        type: "line",
+        data: [],
+    })
 
     genalg(epochs);
 
@@ -91,7 +101,7 @@ function crossover(individuo1, individuo2) {
     var idx1 = Math.round(Math.random() * (length - 1));
     var idx2 = Math.round(Math.random() * (length - 1));
 
-    if(idx1 > idx2){
+    if (idx1 > idx2) {
         let temp = idx1;
         idx1 = idx2;
         idx2 = temp;
@@ -101,10 +111,10 @@ function crossover(individuo1, individuo2) {
         if (i <= idx1) {
             children1.push(individuo1[0][i]);
             children2.push(individuo2[0][i]);
-        } else if((i > idx1) && (i<= idx2)) {
+        } else if ((i > idx1) && (i <= idx2)) {
             children1.push(individuo2[0][i]);
             children2.push(individuo1[0][i]);
-        }else{
+        } else {
             children1.push(individuo1[0][i]);
             children2.push(individuo2[0][i]);
         }
@@ -162,11 +172,11 @@ function fitness(originalShape, newShape) {
         let value = newShape.data[i] - originalShape.data[i];
         //multiplica ap quadrado
         value = value * value;
-        // //divide por length
-        value = value / length
         //guardar informação
         fitnessValue += value;
     }
+
+    fitnessValue = (fitnessValue) / length;
 
     return fitnessValue;
 
@@ -178,19 +188,18 @@ function compute_fitness(population) {
 
     //calcular score de cada individuo
     for (let i = 0; i < population.length; i++) {
-        
-            //limpando contexto
-            context2.clearRect(0, 0, width, height);
-            //redesenhando nova imagem
-            drawTriagle(population[i][0], context2);
-            //mostrando nova imgagem = individuo
-            let newImage = context2.getImageData(0, 0, width, height);
-            //calculando fitness
-            score = fitness(realImage, newImage);
 
-            newPopulation.push([population[i], score]);
-        
+        //redesenhando nova imagem
+        draw(population[i][0]);
+        //mostrando nova imgagem = individuo
+        let newImage = context2.getImageData(0, 0, width, height);
+        //calculando fitness
+        score = fitness(realImage, newImage);
+
+        newPopulation.push([population[i], score]);
+
     }
+
 
     newPopulation.sort(function compare(a, b) {
         if (a[1] < b[1]) return -1;
@@ -198,20 +207,21 @@ function compute_fitness(population) {
         return 0;
     });
 
-    // console.log("population", population[0]);
 
     //mostrando o melhor
-    //limpando contexto
-    context2.clearRect(0, 0, width, height);
-    //redesenhando nova imagem
-    drawTriagle(population[0][0]);
+    draw(population[0][0]);
 
 
     return newPopulation;
 
 }
 
-function drawTriagle(data) {
+function draw(data) {
+
+    //limpando contexto
+    context2.clearRect(0, 0, width, height);
+    context2.fillStyle = `rgba(${colorBase[0]},${colorBase[1]},${colorBase[2]},${colorBase[3]})`;
+    context2.fillRect(0, 0, canvas.width, canvas.height);
 
     for (let i = 0; i < data.length; i++) {
         var img = data[i];
@@ -257,8 +267,9 @@ function new_generation(population) {
     var newPopulation = [];
 
     let length = populationSize - eliteSize;
+    var count = 0;
 
-    for (let i = 0; i < length; i++) {
+    do {
         let individuo1 = population[roulete(population)][0]
         let individuo2 = population[roulete(population)][0]
         let childrens = crossover(individuo1, individuo2);
@@ -271,7 +282,9 @@ function new_generation(population) {
 
         newPopulation.push([newIndividuo1, 0]);
         newPopulation.push([newIndividuo2, 0]);
-    }
+
+        count += 2;
+    } while (count < length)
 
     return newPopulation;
 
@@ -280,11 +293,13 @@ function new_generation(population) {
 function genalg(epochs) {
 
     var population = create_population();
+    var bestOfAll = [];
+    var fitnessAtual = [];
+    var fitnessChart = [];
+    var generationChart = [];
 
-    //limpando contexto
-    context2.clearRect(0, 0, width, height);
     //redesenhando nova imagem
-    drawTriagle(population[0][0]);
+    draw(population[0][0]);
 
     for (let i = 0; i < epochs; i++) {
 
@@ -293,12 +308,18 @@ function genalg(epochs) {
             var elite = [];
 
             population = compute_fitness(population);
+            fitnessAtual = population[0][1];
 
             for (let j = 0; j < eliteSize; j++) {
-                elite.push(population[j])
+                elite.push(population[j][0])
             }
 
-            // console.log(elite[0][1]);
+            if (i == 0) {
+                bestOfAll = population[0][1];
+            } else {
+                if (bestOfAll > population[0][1])
+                    bestOfAll = population[0][1];
+            }
 
             population = new_generation(population);
 
@@ -306,22 +327,34 @@ function genalg(epochs) {
                 population.push(elite[j]);
             }
 
-            //console.log(elite[0][1]);
-
             text.innerText = `Geração: ${(i + 1)} \n`;
-            text.innerText += `Fitness: ${Math.round(elite[0][1])} \n`;
+            text.innerText += `Fitness: ${Math.round(fitnessAtual)} \n`;
+            text.innerText += `Melhor Fitness: ${Math.round(bestOfAll)} \n`;
+
+            if (i % (epochs / 10) == 0) {
+                fitnessChart.push((fitnessAtual / 100).toFixed(1));
+                generationChart.push(i + 1);
+                drawChart(fitnessChart, generationChart);
+            }
 
         });
 
     }
 
-    // //mostrando o melhor
-    // context2.clearRect(0, 0, width, height);
-    // drawTriagle(population[0][0]);
+}
 
-    // console.log(population[0][0]);
+function drawChart(fitnessList, generationList) {
 
-    // console.log("aqui");
+    chartData.config.data = {
+        labels: generationList,
+        datasets: [{
+            label: 'Fitness',
+            data: fitnessList,
+            borderWidth: 1
+        }]
+    };
+
+    chartData.update();
 
 }
 
@@ -329,40 +362,40 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// function trasnformCanal(data) {
-//     var newData = [];
+function trasnformCanal(data) {
+    var newData = [];
 
-//     for (let i = 0; i < data.length; i += 4) {
-//         let red = data[i];
-//         let green = data[i + 1];
-//         let blue = data[i + 2];
-//         let aplha = data[i + 3];
-//         let shape = [red, green, blue, aplha];
-//         newData.push(shape);
-//     }
+    for (let i = 0; i < data.length; i += 4) {
+        let red = data[i];
+        let green = data[i + 1];
+        let blue = data[i + 2];
+        let aplha = data[i + 3];
+        let shape = [red, green, blue, aplha];
+        newData.push(shape);
+    }
 
-//     return newData;
-// }
+    return newData;
+}
 
-// function mediaCanal(data) {
-//     var newData = [];
+function mediaCanal(data) {
+    var newData = [];
 
-//     var red = 0;
-//     var green = 0;
-//     var blue = 0;
-//     var alpha = 0;
+    var red = 0;
+    var green = 0;
+    var blue = 0;
+    var alpha = 0;
 
-//     for (let i = 0; i < data.length; i++) {
-//         red += data[i][0];
-//         green += data[i][1];
-//         blue += data[i][2];
-//         alpha += data[i][3];
-//     }
+    for (let i = 0; i < data.length; i++) {
+        red += data[i][0];
+        green += data[i][1];
+        blue += data[i][2];
+        alpha += data[i][3];
+    }
 
-//     newData.push(red / (data.length + 1));
-//     newData.push(green / (data.length + 1));
-//     newData.push(blue / (data.length + 1));
-//     newData.push(alpha / (data.length + 1));
+    newData.push(red / (data.length + 1));
+    newData.push(green / (data.length + 1));
+    newData.push(blue / (data.length + 1));
+    newData.push(alpha / (data.length + 1));
 
-//     return newData;
-// }
+    return newData;
+}
