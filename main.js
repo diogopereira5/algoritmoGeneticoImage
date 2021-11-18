@@ -3,8 +3,8 @@ var mediaAplhaImageReal = [];
 var mediaAplhaNewImage = [];
 const numberTriagles = 100;
 const populationSize = 100;
-const eliteSize = 10;
-const epochs = (10 * 1000);
+const eliteSize = 2;
+const epochs = (0.001 * 1000);
 
 //declarando elementos
 const canvas = document.getElementById("canvas");
@@ -81,23 +81,40 @@ function create_population(size = populationSize) {
 
 function crossover(individuo1, individuo2) {
 
-    var children = [];
+    var children1 = [];
+    var children2 = [];
+    var childrens = [];
 
     let length = individuo1[0].length;
 
-    //reprodução de um ponto
-    var idx = Math.round(Math.random() * (length - 1));
+    //reprodução de dois pontos
+    var idx1 = Math.round(Math.random() * (length - 1));
+    var idx2 = Math.round(Math.random() * (length - 1));
+
+    if(idx1 > idx2){
+        let temp = idx1;
+        idx1 = idx2;
+        idx2 = temp;
+    }
 
     for (let i = 0; i < length; i++) {
-        if (i <= idx) {
-            children.push(individuo1[0][i])
-        } else {
-            children.push(individuo2[0][i])
+        if (i <= idx1) {
+            children1.push(individuo1[0][i]);
+            children2.push(individuo2[0][i]);
+        } else if((i > idx1) && (i<= idx2)) {
+            children1.push(individuo2[0][i]);
+            children2.push(individuo1[0][i]);
+        }else{
+            children1.push(individuo1[0][i]);
+            children2.push(individuo2[0][i]);
         }
     }
 
+    childrens.push(children1);
+    childrens.push(children2);
+
     //retorna um filho
-    return children;
+    return childrens;
 
 }
 
@@ -145,7 +162,7 @@ function fitness(originalShape, newShape) {
         let value = newShape.data[i] - originalShape.data[i];
         //multiplica ap quadrado
         value = value * value;
-        //divide por length
+        // //divide por length
         value = value / length
         //guardar informação
         fitnessValue += value;
@@ -161,7 +178,7 @@ function compute_fitness(population) {
 
     //calcular score de cada individuo
     for (let i = 0; i < population.length; i++) {
-        if (population[i][1] == 0) {
+        
             //limpando contexto
             context2.clearRect(0, 0, width, height);
             //redesenhando nova imagem
@@ -169,15 +186,15 @@ function compute_fitness(population) {
             //mostrando nova imgagem = individuo
             let newImage = context2.getImageData(0, 0, width, height);
             //calculando fitness
-            score = fitness(realImage, newImage)
+            score = fitness(realImage, newImage);
 
             newPopulation.push([population[i], score]);
-        }
+        
     }
 
     newPopulation.sort(function compare(a, b) {
-        if (a[1] < b[1]) return 1;
-        if (a[1] > b[1]) return -1;
+        if (a[1] < b[1]) return -1;
+        if (a[1] > b[1]) return 1;
         return 0;
     });
 
@@ -213,13 +230,14 @@ function roulete(population) {
     var fitnessTotal = 0;
     var subtotal = 0;
     var idx = 0;
+    var length = (population.length) / 2
 
     //calcular soma de fitness
-    for (let i = 0; i < population.length; i++) {
+    for (let i = 0; i < length; i++) {
         fitnessTotal += population[i][1];
     }
 
-    var choice = Math.random() * (fitnessTotal)
+    var choice = Math.random() * (fitnessTotal);
 
     //escolha
     for (let i = 0; i < population.length; i++) {
@@ -243,9 +261,16 @@ function new_generation(population) {
     for (let i = 0; i < length; i++) {
         let individuo1 = population[roulete(population)][0]
         let individuo2 = population[roulete(population)][0]
-        let newIndividuo = crossover(individuo1, individuo2);
-        newIndividuo = mutation(newIndividuo);
-        newPopulation.push([newIndividuo, 0]);
+        let childrens = crossover(individuo1, individuo2);
+
+        newIndividuo1 = childrens[0];
+        newIndividuo2 = childrens[1];
+
+        newIndividuo1 = mutation(newIndividuo1);
+        newIndividuo2 = mutation(newIndividuo2);
+
+        newPopulation.push([newIndividuo1, 0]);
+        newPopulation.push([newIndividuo2, 0]);
     }
 
     return newPopulation;
@@ -281,10 +306,10 @@ function genalg(epochs) {
                 population.push(elite[j]);
             }
 
+            //console.log(elite[0][1]);
+
             text.innerText = `Geração: ${(i + 1)} \n`;
             text.innerText += `Fitness: ${Math.round(elite[0][1])} \n`;
-            text.innerText += `Tamnaho da População: ${population.length} \n`;
-            text.innerText += `Tamanho do genoma do primeiro individuo: ${population[0][0].length} \n`;
 
         });
 
