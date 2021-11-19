@@ -1,10 +1,13 @@
 var realImage = [];
 var colorBase = [];
+var chartData = null;
+var theBest = [];
 const numberTriagles = 100;
 const populationSize = 100;
-const eliteSize = 2;
-const epochs = (50 * 1000);
-var chartData = null;
+const eliteSize = 10;
+const epochs = (10 * 1000);
+const plotChart = 100;
+const mutationRate = 0.01;
 
 //declarando elementos
 const canvas = document.getElementById("canvas");
@@ -28,17 +31,24 @@ window.onload = function () {
     const image = document.getElementById("image");
     context.drawImage(image, 0, 0, width, height);
 
+    // context2.beginPath();
+    // context2.fillStyle = "rgba(100,25,2,0.5)";
+    // context2.arc(100, 100, 50, 0, 2 * Math.PI);
+    // context2.fill();
+
     //pegando o shape da image data do canvas [12,121,12,212,121...]1
     realImage = context.getImageData(0, 0, width, height);
-    let temp = trasnformCanal(realImage.data);
-    colorBase = mediaCanal(temp);
+    // let temp = trasnformCanal(realImage.data);
+    // colorBase = mediaCanal(temp);
 
+    //inicializa chart
     chartData = new Chart(chartCtx, {
         type: "line",
         data: [],
     })
 
     genalg(epochs);
+    // test();
 
 }
 
@@ -95,7 +105,7 @@ function crossover(individuo1, individuo2) {
     var children2 = [];
     var childrens = [];
 
-    let length = individuo1[0].length;
+    let length = individuo1.length;
 
     //reprodução de dois pontos
     var idx1 = Math.round(Math.random() * (length - 1));
@@ -107,16 +117,17 @@ function crossover(individuo1, individuo2) {
         idx2 = temp;
     }
 
+
     for (let i = 0; i < length; i++) {
         if (i <= idx1) {
-            children1.push(individuo1[0][i]);
-            children2.push(individuo2[0][i]);
+            children1.push(individuo1[i]);
+            children2.push(individuo2[i]);
         } else if ((i > idx1) && (i <= idx2)) {
-            children1.push(individuo2[0][i]);
-            children2.push(individuo1[0][i]);
+            children1.push(individuo2[i]);
+            children2.push(individuo1[i]);
         } else {
-            children1.push(individuo1[0][i]);
-            children2.push(individuo2[0][i]);
+            children1.push(individuo1[i]);
+            children2.push(individuo2[i]);
         }
     }
 
@@ -130,31 +141,39 @@ function crossover(individuo1, individuo2) {
 
 function mutation(individuo) {
 
-
     var length = individuo.length;
     var idxIndividuo = Math.round(Math.random() * (length - 1));
     var chromosome = individuo[idxIndividuo];
 
-    length = chromosome.length;
-    var idx = Math.round(Math.random() * (length - 1));
+    p = length * mutationRate;
+    var tot = Math.round(Math.random() * (p));
 
-
-    //represeta as coordenadas 0 a 5
-    if (idx % 10 < 6) {
-        if (idx % 2) {
-            chromosome[idx] = Math.random() * (width - 1);
-        } else {
-            chromosome[idx] = Math.random() * (height - 1);
-        }
-    } else if (idx % 10 < 9) {
-        //cores
-        chromosome[idx] = Math.random() * (255 - 1);
-    } else {
-        //alpha
-        chromosome[idx] = Math.random();
+    if (tot < 0) {
+        tot = 0;
+    } else if (tot > length) {
+        tot = 1;
     }
 
-    individuo[idxIndividuo] = chromosome;
+    for (let i = 0; i < tot; i++) {
+
+        let idx = Math.round(Math.random() * (length - 1));
+        //represeta as coordenadas 0 a 5
+        if (idx % 10 < 6) {
+            if (idx % 2) {
+                chromosome[idx] = Math.random() * (width - 1);
+            } else {
+                chromosome[idx] = Math.random() * (height - 1);
+            }
+        } else if (idx % 10 < 9) {
+            //cores
+            chromosome[idx] = Math.random() * (255 - 1);
+        } else {
+            //alpha
+            chromosome[idx] = Math.random();
+        }
+
+        individuo[idxIndividuo] = chromosome;
+    }
 
     return individuo;
 
@@ -190,16 +209,15 @@ function compute_fitness(population) {
     for (let i = 0; i < population.length; i++) {
 
         //redesenhando nova imagem
-        draw(population[i][0]);
+        draw(population[i][0], context2);
         //mostrando nova imgagem = individuo
         let newImage = context2.getImageData(0, 0, width, height);
         //calculando fitness
         score = fitness(realImage, newImage);
 
-        newPopulation.push([population[i], score]);
+        newPopulation.push([population[i][0], score]);
 
     }
-
 
     newPopulation.sort(function compare(a, b) {
         if (a[1] < b[1]) return -1;
@@ -207,40 +225,41 @@ function compute_fitness(population) {
         return 0;
     });
 
-
     //mostrando o melhor
-    draw(population[0][0]);
-
+    // draw(theBest[0][0], context);
 
     return newPopulation;
 
 }
 
-function draw(data) {
+function draw(data, ctx) {
 
     //limpando contexto
-    context2.clearRect(0, 0, width, height);
-    context2.fillStyle = `rgba(${colorBase[0]},${colorBase[1]},${colorBase[2]},${colorBase[3]})`;
-    context2.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, width, height);
+    // context2.fillStyle = `rgba(${colorBase[0]},${colorBase[1]},${colorBase[2]},${colorBase[3]})`;
+    // context2.fillRect(0, 0, canvas.width, canvas.height);
 
     for (let i = 0; i < data.length; i++) {
         var img = data[i];
         var path = new Path2D();
-        context2.fillStyle = `rgba(${img[6]},${img[7]},${img[8]},${img[9]})`
+        ctx.fillStyle = `rgba(${img[6]},${img[7]},${img[8]},${img[9]})`
         path.moveTo(img[0], img[1]);
         path.lineTo(img[2], img[3]);
         path.lineTo(img[4], img[5]);
-        context2.fill(path);
+        ctx.fill(path);
     }
 
 }
 
 function roulete(population) {
 
+    idx = Math.round(Math.random() * (population.length * 0.1));
+    return idx;
+
     var fitnessTotal = 0;
     var subtotal = 0;
     var idx = 0;
-    var length = (population.length) / 2
+    var length = population.length
 
     //calcular soma de fitness
     for (let i = 0; i < length; i++) {
@@ -270,18 +289,17 @@ function new_generation(population) {
     var count = 0;
 
     do {
+
         let individuo1 = population[roulete(population)][0]
         let individuo2 = population[roulete(population)][0]
+
         let childrens = crossover(individuo1, individuo2);
 
-        newIndividuo1 = childrens[0];
-        newIndividuo2 = childrens[1];
+        newIndividuo1 = mutation(childrens[0]);
+        newIndividuo2 = mutation(childrens[1]);
 
-        newIndividuo1 = mutation(newIndividuo1);
-        newIndividuo2 = mutation(newIndividuo2);
-
-        newPopulation.push([newIndividuo1, 0]);
-        newPopulation.push([newIndividuo2, 0]);
+        newPopulation.push([childrens[0], 0]);
+        newPopulation.push([childrens[1], 0]);
 
         count += 2;
     } while (count < length)
@@ -290,16 +308,32 @@ function new_generation(population) {
 
 }
 
+function test() {
+    var elite = [];
+    var population = create_population();
+    population = compute_fitness(population);
+    for (let j = 0; j < eliteSize; j++) {
+        elite.push(population[j][0])
+    }
+    population = new_generation(population);
+    for (let j = 0; j < elite.length; j++) {
+        population.push([elite[j], 0]);
+    }
+    console.log(population);
+    population = compute_fitness(population);
+    console.log(population);
+}
+
 function genalg(epochs) {
 
     var population = create_population();
-    var bestOfAll = [];
+    var bestFitnessScore = [];
     var fitnessAtual = [];
     var fitnessChart = [];
     var generationChart = [];
 
     //redesenhando nova imagem
-    draw(population[0][0]);
+    // draw(population[0][0]);
 
     for (let i = 0; i < epochs; i++) {
 
@@ -315,25 +349,28 @@ function genalg(epochs) {
             }
 
             if (i == 0) {
-                bestOfAll = population[0][1];
-            } else {
-                if (bestOfAll > population[0][1])
-                    bestOfAll = population[0][1];
+                bestFitnessScore = population[0][1];
+                draw(population[0][0], context);
+            } else if (bestFitnessScore > population[0][1]) {
+                bestFitnessScore = population[0][1];
+                draw(population[0][0], context);
             }
 
             population = new_generation(population);
 
             for (let j = 0; j < elite.length; j++) {
-                population.push(elite[j]);
+                population.push([elite[j], 0]);
             }
 
             text.innerText = `Geração: ${(i + 1)} \n`;
             text.innerText += `Fitness: ${Math.round(fitnessAtual)} \n`;
-            text.innerText += `Melhor Fitness: ${Math.round(bestOfAll)} \n`;
+            text.innerText += `Melhor Fitness: ${Math.round(bestFitnessScore)} \n`;
 
-            if (i % (epochs / 10) == 0) {
-                fitnessChart.push((fitnessAtual / 100).toFixed(1));
-                generationChart.push(i + 1);
+
+            //plotar grafico x vezes na tela com os dados da fitness
+            if (i % (epochs / plotChart) == 0) {
+                fitnessChart.push((fitnessAtual).toFixed(1));
+                generationChart.push(i);
                 drawChart(fitnessChart, generationChart);
             }
 
