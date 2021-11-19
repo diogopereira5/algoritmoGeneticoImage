@@ -303,19 +303,16 @@ function new_generation(population) {
     let length = populationSize - eliteSize;
     var count = 0;
 
-    let individuo1 = population[0][0];
-    let individuo2 = population[0][0];
-
 
     do {
 
-        // let individuo1 = population[roulete(population)][0];
-        // let individuo2 = population[roulete(population)][0];
+        let individuo1 = population[roulete(population)][0];
+        let individuo2 = population[roulete(population)][0];
 
         let childrens = crossover(individuo1, individuo2);
 
         newIndividuo1 = mutation(childrens[0]);
-        newIndividuo2 = mutation(childrens[0]);
+        newIndividuo2 = mutation(childrens[1]);
 
         newPopulation.push([newIndividuo1, 0]);
         newPopulation.push([newIndividuo2, 0]);
