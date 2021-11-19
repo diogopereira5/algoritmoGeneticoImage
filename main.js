@@ -6,7 +6,7 @@ const numberTriagles = 100;
 const populationSize = 100;
 const eliteSize = 2;
 const epochs = (50 * 1000);
-const plotChart = (epochs / 10);
+const plotChart = (epochs / 100);
 const mutationRate = 0.001;
 
 //declarando elementos
@@ -18,9 +18,6 @@ const context2 = canvas2.getContext('2d');
 
 const chartCanvas = document.getElementById('chart');
 const chartCtx = chartCanvas.getContext('2d');
-
-const canvas3 = document.getElementById("canvas3");
-const context3 = canvas3.getContext('2d');
 
 const text = document.getElementById("infor");
 
@@ -249,9 +246,6 @@ function compute_fitness(population) {
         return 0;
     });
 
-    context3.clearRect(0, 0, width, height);
-    draw(newPopulation[0][0], context3);
-
     return newPopulation;
 
 }
@@ -309,22 +303,19 @@ function new_generation(population) {
     let length = populationSize - eliteSize;
     var count = 0;
 
-    // let individuo1 = population[roulete(population)][0];
-    // let individuo2 = population[roulete(population)][0];
-
-    // let individuo1 = population[roulete(population)][0];
-    // let individuo2 = population[roulete(population)][0];
+    let individuo1 = population[0][0];
+    let individuo2 = population[0][0];
 
 
     do {
 
-        let individuo1 = population[roulete(population)][0];
-        let individuo2 = population[roulete(population)][0];
+        // let individuo1 = population[roulete(population)][0];
+        // let individuo2 = population[roulete(population)][0];
 
         let childrens = crossover(individuo1, individuo2);
-        
+
         newIndividuo1 = mutation(childrens[0]);
-        newIndividuo2 = mutation(childrens[1]);
+        newIndividuo2 = mutation(childrens[0]);
 
         newPopulation.push([newIndividuo1, 0]);
         newPopulation.push([newIndividuo2, 0]);
