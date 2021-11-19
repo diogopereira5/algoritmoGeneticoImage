@@ -5,7 +5,7 @@ var theBest = [];
 const numberTriagles = 100;
 const populationSize = 100;
 const eliteSize = 10;
-const epochs = (10 * 1000);
+const epochs = (100 * 1000);
 const plotChart = 100;
 const mutationRate = 0.01;
 
@@ -45,6 +45,17 @@ window.onload = function () {
     chartData = new Chart(chartCtx, {
         type: "line",
         data: [],
+        options: {
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Fitness'
+                }
+            }
+        }
     })
 
     genalg(epochs);
@@ -253,13 +264,10 @@ function draw(data, ctx) {
 
 function roulete(population) {
 
-    idx = Math.round(Math.random() * (population.length * 0.1));
-    return idx;
-
     var fitnessTotal = 0;
     var subtotal = 0;
     var idx = 0;
-    var length = population.length
+    var length = (population.length / 2);
 
     //calcular soma de fitness
     for (let i = 0; i < length; i++) {
