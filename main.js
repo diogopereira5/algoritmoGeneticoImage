@@ -4,9 +4,9 @@ var chartData = null;
 var theBest = [];
 const numberTriagles = 100;
 const populationSize = 100;
-const eliteSize = 10;
-const epochs = (100 * 1000);
-const plotChart = 100;
+const eliteSize = 2;
+const epochs = (10 * 1000);
+const plotChart = 50;
 const mutationRate = 0.01;
 
 //declarando elementos
@@ -267,7 +267,7 @@ function roulete(population) {
     var fitnessTotal = 0;
     var subtotal = 0;
     var idx = 0;
-    var length = (population.length / 2);
+    var length = population.length
 
     //calcular soma de fitness
     for (let i = 0; i < length; i++) {
@@ -295,11 +295,11 @@ function new_generation(population) {
 
     let length = populationSize - eliteSize;
     var count = 0;
+    
+    let individuo1 = population[roulete(population)][0]
+    let individuo2 = population[roulete(population)][0]
 
     do {
-
-        let individuo1 = population[roulete(population)][0]
-        let individuo2 = population[roulete(population)][0]
 
         let childrens = crossover(individuo1, individuo2);
 
