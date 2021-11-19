@@ -5,9 +5,9 @@ var theBest = [];
 const numberTriagles = 100;
 const populationSize = 100;
 const eliteSize = 2;
-const epochs = (10 * 1000);
-const plotChart = 50;
-const mutationRate = 0.01;
+const epochs = (50 * 1000);
+const plotChart = (epochs / 10);
+const mutationRate = 0.001;
 
 //declarando elementos
 const canvas = document.getElementById("canvas");
@@ -18,6 +18,9 @@ const context2 = canvas2.getContext('2d');
 
 const chartCanvas = document.getElementById('chart');
 const chartCtx = chartCanvas.getContext('2d');
+
+const canvas3 = document.getElementById("canvas3");
+const context3 = canvas3.getContext('2d');
 
 const text = document.getElementById("infor");
 
@@ -56,7 +59,15 @@ window.onload = function () {
                 }
             }
         }
-    })
+    });
+
+    chartData.options.animation = false;
+
+    population = create_population(100);
+    population = compute_fitness(population);
+    roulete(population);
+
+    // console.log(population[0][0]);
 
     genalg(epochs);
     // test();
@@ -74,16 +85,16 @@ function createIdividual(size = numberTriagles) {
 
         //vertices
         for (let j = 0; j < 3; j++) {
-            let vx = Math.random() * (width - 1);
-            let vy = Math.random() * (height - 1);
+            let vx = Math.round(Math.random() * (width - 1));
+            let vy = Math.round(Math.random() * (height - 1));
             temp.push(vx, vy)
         }
 
         //cor rgba
-        let red = Math.random() * (255 - 1);
-        let green = Math.random() * (255 - 1);
-        let blue = Math.random() * (255 - 1);
-        let aplha = Math.random();
+        let red = Math.round(Math.random() * (255 - 1));
+        let green = Math.round(Math.random() * (255 - 1));
+        let blue = Math.round(Math.random() * (255 - 1));
+        let aplha = Math.round(Math.random() * 64) / 100;
 
         temp.push(red);
         temp.push(green);
@@ -156,13 +167,15 @@ function mutation(individuo) {
     var idxIndividuo = Math.round(Math.random() * (length - 1));
     var chromosome = individuo[idxIndividuo];
 
-    p = length * mutationRate;
-    var tot = Math.round(Math.random() * (p));
+
+    p = (length) * mutationRate;
+    // var tot = Math.round(Math.random() * (p));
+    var tot = Math.round(gaussian(p));
 
     if (tot < 0) {
         tot = 0;
     } else if (tot > length) {
-        tot = 1;
+        tot = length;
     }
 
     for (let i = 0; i < tot; i++) {
@@ -171,16 +184,16 @@ function mutation(individuo) {
         //represeta as coordenadas 0 a 5
         if (idx % 10 < 6) {
             if (idx % 2) {
-                chromosome[idx] = Math.random() * (width - 1);
+                chromosome[idx] = Math.round(Math.random() * (width - 1));
             } else {
-                chromosome[idx] = Math.random() * (height - 1);
+                chromosome[idx] = Math.round(Math.random() * (height - 1));
             }
         } else if (idx % 10 < 9) {
             //cores
-            chromosome[idx] = Math.random() * (255 - 1);
+            chromosome[idx] = Math.round(Math.random() * (255 - 1));
         } else {
             //alpha
-            chromosome[idx] = Math.random();
+            chromosome[idx] = Math.random() * (0.64);
         }
 
         individuo[idxIndividuo] = chromosome;
@@ -206,7 +219,7 @@ function fitness(originalShape, newShape) {
         fitnessValue += value;
     }
 
-    fitnessValue = (fitnessValue) / length;
+    fitnessValue = (fitnessValue) / (length * 4);
 
     return fitnessValue;
 
@@ -236,8 +249,8 @@ function compute_fitness(population) {
         return 0;
     });
 
-    //mostrando o melhor
-    // draw(theBest[0][0], context);
+    context3.clearRect(0, 0, width, height);
+    draw(newPopulation[0][0], context3);
 
     return newPopulation;
 
@@ -247,8 +260,8 @@ function draw(data, ctx) {
 
     //limpando contexto
     ctx.clearRect(0, 0, width, height);
-    context2.fillStyle = `rgba(${colorBase[0]},${colorBase[1]},${colorBase[2]},${colorBase[3]})`;
-    context2.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = `rgba(${colorBase[0]},${colorBase[1]},${colorBase[2]},${colorBase[3]})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     for (let i = 0; i < data.length; i++) {
         var img = data[i];
@@ -267,7 +280,7 @@ function roulete(population) {
     var fitnessTotal = 0;
     var subtotal = 0;
     var idx = 0;
-    var length = population.length
+    var length = population.length;
 
     //calcular soma de fitness
     for (let i = 0; i < length; i++) {
@@ -295,19 +308,26 @@ function new_generation(population) {
 
     let length = populationSize - eliteSize;
     var count = 0;
-    
-    let individuo1 = population[roulete(population)][0]
-    let individuo2 = population[roulete(population)][0]
+
+    // let individuo1 = population[roulete(population)][0];
+    // let individuo2 = population[roulete(population)][0];
+
+    // let individuo1 = population[roulete(population)][0];
+    // let individuo2 = population[roulete(population)][0];
+
 
     do {
 
-        let childrens = crossover(individuo1, individuo2);
+        let individuo1 = population[roulete(population)][0];
+        let individuo2 = population[roulete(population)][0];
 
+        let childrens = crossover(individuo1, individuo2);
+        
         newIndividuo1 = mutation(childrens[0]);
         newIndividuo2 = mutation(childrens[1]);
 
-        newPopulation.push([childrens[0], 0]);
-        newPopulation.push([childrens[1], 0]);
+        newPopulation.push([newIndividuo1, 0]);
+        newPopulation.push([newIndividuo2, 0]);
 
         count += 2;
     } while (count < length)
@@ -443,4 +463,12 @@ function mediaCanal(data) {
     newData.push(alpha / (data.length + 1));
 
     return newData;
+}
+
+// Standard Normal variate using Box-Muller transform.
+function gaussian(p) {
+    var u = p, v = p / 2;
+    while (u === 0) u = Math.random(); //Converting [0,1) to (0,1)
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
 }
