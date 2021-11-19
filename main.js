@@ -38,8 +38,8 @@ window.onload = function () {
 
     //pegando o shape da image data do canvas [12,121,12,212,121...]1
     realImage = context.getImageData(0, 0, width, height);
-    // let temp = trasnformCanal(realImage.data);
-    // colorBase = mediaCanal(temp);
+    let temp = trasnformCanal(realImage.data);
+    colorBase = mediaCanal(temp);
 
     //inicializa chart
     chartData = new Chart(chartCtx, {
@@ -247,8 +247,8 @@ function draw(data, ctx) {
 
     //limpando contexto
     ctx.clearRect(0, 0, width, height);
-    // context2.fillStyle = `rgba(${colorBase[0]},${colorBase[1]},${colorBase[2]},${colorBase[3]})`;
-    // context2.fillRect(0, 0, canvas.width, canvas.height);
+    context2.fillStyle = `rgba(${colorBase[0]},${colorBase[1]},${colorBase[2]},${colorBase[3]})`;
+    context2.fillRect(0, 0, canvas.width, canvas.height);
 
     for (let i = 0; i < data.length; i++) {
         var img = data[i];
